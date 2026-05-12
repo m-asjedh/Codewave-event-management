@@ -1,0 +1,82 @@
+@import "tailwindcss";
+
+:root {
+  --cw-bg: #f4f7fb;
+  --cw-surface: #ffffff;
+  --cw-surface-2: #eef2f9;
+  --cw-text: #0c1222;
+  --cw-muted: #5c6578;
+  --cw-border: rgba(12, 18, 34, 0.1);
+  --cw-accent: #0d6e7a;
+  --cw-accent-hover: #0a5660;
+  --cw-glow: rgba(13, 110, 122, 0.35);
+  --cw-danger: #b42318;
+  --cw-radius: 14px;
+  --cw-radius-sm: 10px;
+  --cw-shadow: 0 18px 50px rgba(12, 18, 34, 0.08);
+  --cw-shadow-sm: 0 8px 24px rgba(12, 18, 34, 0.06);
+}
+
+html.dark {
+  --cw-bg: #070b12;
+  --cw-surface: #0f141f;
+  --cw-surface-2: #151c2b;
+  --cw-text: #eef2ff;
+  --cw-muted: #9aa4b8;
+  --cw-border: rgba(238, 242, 255, 0.08);
+  --cw-accent: #3dd6e4;
+  --cw-accent-hover: #67e8f4;
+  --cw-glow: rgba(61, 214, 228, 0.25);
+  --cw-danger: #fca5a5;
+  --cw-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+  --cw-shadow-sm: 0 12px 40px rgba(0, 0, 0, 0.35);
+}
+
+@theme inline {
+  --color-cw-bg: var(--cw-bg);
+  --color-cw-surface: var(--cw-surface);
+  --color-cw-surface-2: var(--cw-surface-2);
+  --color-cw-text: var(--cw-text);
+  --color-cw-muted: var(--cw-muted);
+  --color-cw-border: var(--cw-border);
+  --color-cw-accent: var(--cw-accent);
+  --color-cw-accent-hover: var(--cw-accent-hover);
+  --color-cw-danger: var(--cw-danger);
+  --radius-cw: var(--cw-radius);
+  --radius-cw-sm: var(--cw-radius-sm);
+  --shadow-cw: var(--cw-shadow);
+  --shadow-cw-sm: var(--cw-shadow-sm);
+  --font-sans: var(--font-dm-sans);
+  --font-display: var(--font-fraunces);
+}
+
+@layer base {
+  * {
+    border-color: var(--cw-border);
+  }
+
+  body {
+    background: var(--cw-bg);
+    color: var(--cw-text);
+  }
+
+  ::selection {
+    background: color-mix(in srgb, var(--cw-accent) 35%, transparent);
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-fraunces), ui-serif, Georgia, "Times New Roman", serif;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

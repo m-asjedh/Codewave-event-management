@@ -1,0 +1,28 @@
+.DS_Store
+*.log
+
+# Secrets — never commit
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Next.js
+.next/
+out/
+.vercel
+
+# Serverless
+.serverless/
+
+# TypeScript
+*.tsbuildinfo
+
+# IDE / local
+.cursor/
