@@ -77,12 +77,12 @@ function unconfiguredValue(): AuthContextValue {
     loading: false,
     signIn: async () => {
       throw new Error(
-        "Set COGNITO_USER_POOL_ID, COGNITO_CLIENT_ID, and NEXT_PUBLIC_SITE_URL in .env",
+        "Set NEXT_PUBLIC_COGNITO_USER_POOL_ID, NEXT_PUBLIC_COGNITO_CLIENT_ID, and NEXT_PUBLIC_SITE_URL in .env",
       );
     },
     signUp: async () => {
       throw new Error(
-        "Set COGNITO_USER_POOL_ID, COGNITO_CLIENT_ID, and NEXT_PUBLIC_SITE_URL in .env",
+        "Set NEXT_PUBLIC_COGNITO_USER_POOL_ID, NEXT_PUBLIC_COGNITO_CLIENT_ID, and NEXT_PUBLIC_SITE_URL in .env",
       );
     },
     confirmSignUpCode: async () => {

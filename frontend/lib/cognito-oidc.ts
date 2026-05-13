@@ -8,8 +8,14 @@ function regionFromPoolId(poolId: string): string {
 
 /** Build Cognito User Pool OIDC settings (same shape as AWS Cognito “Quick setup” / react-oidc-context). */
 export function getOidcUserManagerSettings(): UserManagerSettings | null {
-  const poolId = process.env.COGNITO_USER_POOL_ID ?? "";
-  const clientId = process.env.COGNITO_CLIENT_ID ?? "";
+  const poolId =
+    process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID ??
+    process.env.COGNITO_USER_POOL_ID ??
+    "";
+  const clientId =
+    process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID ??
+    process.env.COGNITO_CLIENT_ID ??
+    "";
   const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "").replace(/\/$/, "");
   if (!poolId || !clientId || !siteUrl) return null;
   const region = regionFromPoolId(poolId);
