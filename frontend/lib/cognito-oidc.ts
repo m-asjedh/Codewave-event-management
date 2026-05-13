@@ -22,7 +22,7 @@ export function getOidcUserManagerSettings(): UserManagerSettings | null {
   return {
     authority: `https://cognito-idp.${region}.amazonaws.com/${poolId}`,
     client_id: clientId,
-    redirect_uri: `${siteUrl}/auth/callback/index.html`,
+    redirect_uri: `${siteUrl}/auth/callback/`,
     post_logout_redirect_uri: `${siteUrl}/`,
     response_type: "code",
     scope: "openid email",
