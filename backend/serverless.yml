@@ -150,6 +150,13 @@ functions:
           authorizer:
             name: cognitoJwt
 
+  dailyReminder:
+    handler: src/handlers/dailyReminder.handler
+    description: EventBridge schedule — queue 24h reminder emails for upcoming events
+    timeout: 60
+    events:
+      - schedule: rate(1 day)
+
   processEmail:
     handler: src/handlers/processEmail.handler
     timeout: 60

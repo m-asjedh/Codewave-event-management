@@ -20,23 +20,42 @@ exports.handler = async (event) => {
       continue;
     }
 
-    if (msg.type !== "registration_confirmation") continue;
-
     const to = msg.userEmail;
     if (!to) continue;
 
-    const subject = `You're registered: ${msg.eventTitle || "Event"}`;
-    const text = [
-      `Hi ${msg.userName || "there"},`,
-      "",
-      `You're registered for: ${msg.eventTitle}`,
-      `When: ${msg.eventStartsAt}`,
-      `Where: ${msg.eventLocation}`,
-      "",
-      "See you there!",
-      "",
-      "— CodeWave",
-    ].join("\n");
+    let subject;
+    let text;
+    if (msg.type === "registration_confirmation") {
+      subject = `You're registered: ${msg.eventTitle || "Event"}`;
+      text = [
+        `Hi ${msg.userName || "there"},`,
+        "",
+        `You're registered for: ${msg.eventTitle}`,
+        `When: ${msg.eventStartsAt}`,
+        `Where: ${msg.eventLocation}`,
+        "",
+        "See you there!",
+        "",
+        "— CodeWave",
+      ].join("\n");
+    } else if (msg.type === "event_reminder") {
+      subject = `Reminder: ${msg.eventTitle || "Your event"} is coming up`;
+      text = [
+        `Hi ${msg.userName || "there"},`,
+        "",
+        "This is a reminder about an event you registered for:",
+        "",
+        msg.eventTitle,
+        `When: ${msg.eventStartsAt}`,
+        `Where: ${msg.eventLocation}`,
+        "",
+        "See you there!",
+        "",
+        "— CodeWave",
+      ].join("\n");
+    } else {
+      continue;
+    }
 
     try {
       await ses.send(
