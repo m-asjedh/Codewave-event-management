@@ -16,7 +16,7 @@ provider:
   httpApi:
     cors:
       allowedOrigins:
-        - ${env:CORS_ORIGIN, '*'}
+        - https://main.d2r4vrx4lrmfru.amplifyapp.com
       allowedHeaders:
         - Content-Type
         - Authorization
@@ -24,7 +24,6 @@ provider:
         - GET
         - POST
         - PUT
-        - PATCH
         - DELETE
         - OPTIONS
     authorizers:
