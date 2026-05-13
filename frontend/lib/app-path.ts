@@ -1,6 +1,6 @@
 /**
  * Normalizes internal app paths for `trailingSlash: true` static export
- * (S3 + CloudFront expect `…/index.html` under each segment).
+ * Static hosting expects `…/index.html` under each segment.
  */
 export function withTrailingSlash(path: string): string {
   const raw = path.trim();

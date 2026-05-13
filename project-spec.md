@@ -17,26 +17,26 @@ The MVP covers authenticated users, event CRUD (including banner images on S3), 
 
 ## Repository layout
 
-| Path | Role |
-|------|------|
-| `backend/` | Serverless Framework app: API Gateway, Lambdas, SQS, Cognito integration, EventBridge, SES, S3 (IaC + handlers). |
-| `frontend/` | Next.js (React) app: UI and calls to the backend API. |
-| `project-spec.md` | This specification (source of truth for scope and architecture). |
+| Path              | Role                                                                                                             |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `backend/`        | Serverless Framework app: API Gateway, Lambdas, SQS, Cognito integration, EventBridge, SES, S3 (IaC + handlers). |
+| `frontend/`       | Next.js (React) app: UI and calls to the backend API.                                                            |
+| `project-spec.md` | This specification (source of truth for scope and architecture).                                                 |
 
 ---
 
 ## Technical stack
 
-| Layer | Choice |
-|--------|--------|
-| **IaC** | [Serverless Framework](https://www.serverless.com/) (`serverless.yml`) |
-| **API & compute** | Node.js on **AWS Lambda** behind **API Gateway** |
-| **Database** | **MongoDB Atlas** with **Mongoose** |
-| **Auth** | **AWS Cognito** (JWT on private routes) |
-| **Async messaging** | **Amazon SQS** |
-| **Email** | **Amazon SES** |
-| **Media** | **S3** (+ **CloudFront** for delivery) |
-| **Frontend** | **Next.js** (React) |
+| Layer               | Choice                                                                 |
+| ------------------- | ---------------------------------------------------------------------- |
+| **IaC**             | [Serverless Framework](https://www.serverless.com/) (`serverless.yml`) |
+| **API & compute**   | Node.js on **AWS Lambda** behind **API Gateway**                       |
+| **Database**        | **MongoDB Atlas** with **Mongoose**                                    |
+| **Auth**            | **AWS Cognito** (JWT on private routes)                                |
+| **Async messaging** | **Amazon SQS**                                                         |
+| **Email**           | **Amazon SES**                                                         |
+| **Media**           | **S3** (+ **CloudFront** for delivery)                                 |
+| **Frontend**        | **Next.js** (React)                                                    |
 
 ---
 
