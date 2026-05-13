@@ -10,7 +10,7 @@ import {
 } from "react";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
-import { isCognitoConfigured } from "@/lib/amplify-config";
+import { isOidcConfigured } from "@/lib/cognito-oidc";
 import type { EventRecord, RegistrationRecord } from "@/lib/types";
 
 type EventsContextValue = {
@@ -55,7 +55,7 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
       const list = await apiFetch<EventRecord[]>("/events", { method: "GET", auth: false });
       setEvents(Array.isArray(list) ? list : []);
 
-      if (isCognitoConfigured() && user) {
+      if (isOidcConfigured() && user) {
         try {
           const mine = await apiFetch<{ eventIds: string[] }>("/me/registrations", {
             method: "GET",

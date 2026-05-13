@@ -1,12 +1,14 @@
 import { getPublicApiBaseUrl } from "@/lib/api-base";
-import { fetchAuthSession } from "aws-amplify/auth";
+import { getOidcUserManager } from "@/lib/cognito-oidc";
 
 export type ApiError = { status: number; message: string };
 
 async function getIdToken(): Promise<string | undefined> {
+  const mgr = getOidcUserManager();
+  if (!mgr) return undefined;
   try {
-    const { tokens } = await fetchAuthSession();
-    return tokens?.idToken?.toString();
+    const user = await mgr.getUser();
+    return user?.id_token;
   } catch {
     return undefined;
   }

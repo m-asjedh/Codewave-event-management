@@ -7,6 +7,7 @@ const nextConfig: NextConfig = {
       process.env.COGNITO_USER_POOL_ID ?? process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID ?? "",
     COGNITO_CLIENT_ID:
       process.env.COGNITO_CLIENT_ID ?? process.env.NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID ?? "",
+    NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL ?? "",
   },
   /** Static HTML/CSS/JS in `out/` — upload to S3 and serve behind CloudFront */
   output: "export",
