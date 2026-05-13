@@ -8,7 +8,7 @@ Monorepo for the CodeWave events platform: a **Next.js** frontend, **Serverless 
 |------|---------|
 | `frontend/` | Next.js app — UI, event discovery, dashboard, auth (ready to wire to Cognito + API). |
 | `backend/` | AWS Lambda / API Gateway via Serverless — handlers, `serverless.yml` when present. |
-| `.github/workflows/` | CI/CD — backend (`deploy.yml`) and frontend S3 sync (`deploy-frontend.yml`). |
+| `.github/workflows/` | CI/CD — `deploy-backend.yml`, `deploy-frontend.yml`. |
 | `project-spec.md` | Architecture and MVP scope. |
 
 ## Prerequisites
@@ -28,13 +28,37 @@ cd backend && npm install && npx serverless print   # when serverless.yml exists
 
 Copy env templates (do **not** commit real secrets):
 
-- `backend/.env.example` if you add one — keep `backend/.env` local only.
+- `frontend/.env.example` → copy to **`frontend/.env.local`** and set `NEXT_PUBLIC_API_URL`.
+- `backend/.env.example` — keep `backend/.env` local only.
+
+## Frontend ↔ API (CORS + base URL)
+
+### Where to put `NEXT_PUBLIC_API_URL`
+
+1. **Local:** `frontend/.env.local` (Next.js reads this automatically):
+
+   ```bash
+   NEXT_PUBLIC_API_URL=https://YOUR_API_ID.execute-api.ap-southeast-1.amazonaws.com
+   ```
+
+   No trailing slash. Use `getPublicApiBaseUrl()` from `frontend/lib/api-base.ts` when you add `fetch` calls.
+
+2. **GitHub (production build):** add repository secret **`NEXT_PUBLIC_API_URL`** with the same value. The **Deploy frontend** workflow passes it into `npm run build` so static `out/` bakes in the correct API host.
+
+### CORS (backend)
+
+`backend/serverless.yml` uses **`CORS_ORIGIN`** for HTTP API CORS (`allowedOrigins`). Default is `*` if unset.
+
+- **Tighter:** set GitHub secret **`CORS_ORIGIN`** to your CloudFront site origin, e.g. `https://d3d0peqnjgbcgd.cloudfront.net` (no trailing slash).
+- **Quick test:** leave `CORS_ORIGIN` unset → `*` allows any browser origin.
+
+Redeploy backend after changing **`CORS_ORIGIN`**.
 
 ## Deploy backend (Serverless)
 
-GitHub Actions: `.github/workflows/deploy.yml` on push to `main`.
+GitHub Actions: **`.github/workflows/deploy-backend.yml`** on push to `main`.
 
-**Secrets:** `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, plus optional env passed to Lambdas (`MONGODB_URI`, `SQS_QUEUE_URL`, …).
+**Secrets:** `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`, optional `CORS_ORIGIN`, plus app vars (`MONGODB_URI`, …).
 
 ## Deploy frontend (S3 + CloudFront)
 
@@ -57,6 +81,7 @@ Workflow: **`.github/workflows/deploy-frontend.yml`** (runs when `frontend/**` c
 | `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | Deploy user (needs S3 sync + optional invalidation). |
 | `FRONTEND_S3_BUCKET` | Target bucket for `aws s3 sync out/`. |
 | `FRONTEND_CLOUDFRONT_DISTRIBUTION_ID` | Optional; invalidates `/*` after upload. |
+| `NEXT_PUBLIC_API_URL` | **API HTTP URL** (no trailing slash); baked into static build. |
 
 ### Static export + dynamic URLs
 
