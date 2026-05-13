@@ -112,7 +112,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             : "/dashboard";
         if (typeof window !== "undefined") {
           sessionStorage.removeItem(AUTH_NEXT_KEY);
-          window.history.replaceState({}, document.title, "/auth/callback");
+          window.history.replaceState({}, document.title, "/auth/callback/");
           window.location.replace(next);
         }
       }}

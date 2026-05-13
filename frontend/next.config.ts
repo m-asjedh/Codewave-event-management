@@ -11,6 +11,8 @@ const nextConfig: NextConfig = {
   },
   /** Static HTML/CSS/JS in `out/` — upload to S3 and serve behind CloudFront */
   output: "export",
+  /** Emit `auth/callback/index.html` so `/auth/callback` works on S3/CloudFront (not only `callback.html`). */
+  trailingSlash: true,
   images: {
     unoptimized: true,
     remotePatterns: [
