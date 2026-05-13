@@ -6,8 +6,8 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { useAuth } from "@/lib/auth-context";
 
 const nav = [
-  { href: "/events", label: "Discover" },
-  { href: "/dashboard", label: "Dashboard" },
+  { href: "/events/", label: "Discover" },
+  { href: "/dashboard/", label: "Dashboard" },
 ];
 
 export function SiteHeader() {
@@ -70,7 +70,7 @@ export function SiteHeader() {
           {user ? (
             <>
               <Link
-                href="/dashboard"
+                href="/dashboard/"
                 className="hidden max-w-[10rem] truncate rounded-cw-sm border border-cw-border bg-cw-surface px-3 py-2 text-xs font-medium text-cw-text sm:inline-block"
               >
                 {user.name}
@@ -89,13 +89,13 @@ export function SiteHeader() {
           ) : (
             <>
               <Link
-                href="/auth/login"
+                href="/auth/login/"
                 className="hidden rounded-cw-sm px-3 py-2 text-sm font-semibold text-cw-muted transition hover:text-cw-text sm:inline-block"
               >
                 Log in
               </Link>
               <Link
-                href="/auth/signup"
+                href="/auth/signup/"
                 className="hidden rounded-cw-sm bg-cw-accent px-3 py-2 text-sm font-semibold text-white shadow-cw-sm transition hover:bg-cw-accent-hover sm:inline-block"
               >
                 Sign up
@@ -120,14 +120,14 @@ export function SiteHeader() {
             {!user ? (
               <>
                 <Link
-                  href="/auth/login"
+                  href="/auth/login/"
                   className="rounded-cw-sm px-3 py-2 text-sm font-semibold text-cw-text hover:bg-cw-surface-2"
                   onClick={() => setMenuOpen(false)}
                 >
                   Log in
                 </Link>
                 <Link
-                  href="/auth/signup"
+                  href="/auth/signup/"
                   className="rounded-cw-sm bg-cw-accent px-3 py-2 text-center text-sm font-semibold text-white"
                   onClick={() => setMenuOpen(false)}
                 >

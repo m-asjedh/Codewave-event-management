@@ -28,11 +28,11 @@ export default function HomePage() {
             registration, and a dashboard that stays out of your way.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <LinkButton href="/events" className="rounded-cw px-5 py-3 text-base">
+            <LinkButton href="/events/" className="rounded-cw px-5 py-3 text-base">
               Browse events
             </LinkButton>
             <LinkButton
-              href="/dashboard/events/new"
+              href="/dashboard/events/new/"
               variant="secondary"
               className="rounded-cw px-5 py-3 text-base"
             >
@@ -53,7 +53,7 @@ export default function HomePage() {
             </p>
           </div>
           <Link
-            href="/events"
+            href="/events/"
             className="text-sm font-semibold text-cw-accent hover:text-cw-accent-hover"
           >
             View all →
@@ -61,7 +61,7 @@ export default function HomePage() {
         </div>
         <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {featured.slice(0, 3).map((e) => (
-            <EventCard key={e.id} event={e} href={`/events/${e.id}`} />
+            <EventCard key={e.id} event={e} href={`/events/${e.id}/`} />
           ))}
         </div>
       </section>

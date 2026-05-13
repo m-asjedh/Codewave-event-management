@@ -26,7 +26,7 @@ export default function DashboardEventsPage() {
             Edit copy, timing, and artwork. Deleting removes local registrations too.
           </p>
         </div>
-        <LinkButton href="/dashboard/events/new" className="rounded-cw px-5 py-3">
+        <LinkButton href="/dashboard/events/new/" className="rounded-cw px-5 py-3">
           New event
         </LinkButton>
       </div>
@@ -35,7 +35,7 @@ export default function DashboardEventsPage() {
         <div className="rounded-cw border border-dashed border-cw-border bg-cw-surface-2/50 px-6 py-16 text-center">
           <p className="font-display text-lg font-semibold text-cw-text">No events yet</p>
           <p className="mt-2 text-sm text-cw-muted">Create your first event to see it listed here.</p>
-          <LinkButton href="/dashboard/events/new" className="mt-6 rounded-cw px-6 py-3">
+          <LinkButton href="/dashboard/events/new/" className="mt-6 rounded-cw px-6 py-3">
             Create event
           </LinkButton>
         </div>
@@ -62,13 +62,13 @@ export default function DashboardEventsPage() {
                   <td className="px-4 py-4 text-right">
                     <div className="flex flex-wrap justify-end gap-2">
                       <Link
-                        href={`/events/${e.id}`}
+                        href={`/events/${e.id}/`}
                         className="rounded-cw-sm px-2 py-1 text-xs font-semibold text-cw-accent hover:bg-cw-surface-2"
                       >
                         View
                       </Link>
                       <Link
-                        href={`/dashboard/events/${e.id}/edit`}
+                        href={`/dashboard/events/${e.id}/edit/`}
                         className="rounded-cw-sm px-2 py-1 text-xs font-semibold text-cw-text hover:bg-cw-surface-2"
                       >
                         Edit

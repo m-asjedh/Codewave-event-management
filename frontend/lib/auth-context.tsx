@@ -5,6 +5,7 @@ import {
   AuthProvider as OidcAuthProvider,
   useAuth as useOidcAuth,
 } from "react-oidc-context";
+import { withTrailingSlash } from "@/lib/app-path";
 import { getOidcUserManagerSettings } from "@/lib/cognito-oidc";
 import type { User } from "@/lib/types";
 
@@ -106,13 +107,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     <OidcAuthProvider
       {...settings}
       onSigninCallback={() => {
-        const next =
+        const raw =
           typeof window !== "undefined"
-            ? sessionStorage.getItem(AUTH_NEXT_KEY) ?? "/dashboard"
-            : "/dashboard";
+            ? sessionStorage.getItem(AUTH_NEXT_KEY) ?? "/dashboard/"
+            : "/dashboard/";
+        const next = withTrailingSlash(raw);
         if (typeof window !== "undefined") {
           sessionStorage.removeItem(AUTH_NEXT_KEY);
-          window.history.replaceState({}, document.title, "/auth/callback/");
           window.location.replace(next);
         }
       }}

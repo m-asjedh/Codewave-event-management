@@ -2,9 +2,9 @@ import Link from "next/link";
 import { DashboardGate } from "@/components/dashboard-gate";
 
 const links = [
-  { href: "/dashboard", label: "Overview" },
-  { href: "/dashboard/events", label: "My events" },
-  { href: "/dashboard/events/new", label: "New event" },
+  { href: "/dashboard/", label: "Overview" },
+  { href: "/dashboard/events/", label: "My events" },
+  { href: "/dashboard/events/new/", label: "New event" },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {

@@ -1,26 +1,28 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
+import { withTrailingSlash } from "@/lib/app-path";
 import { useAuth } from "@/lib/auth-context";
 
 const AUTH_NEXT_KEY = "codewave_auth_next";
 
 function LoginForm() {
   const { signIn, user } = useAuth();
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const next = searchParams.get("next") ?? "/dashboard";
+  const next = withTrailingSlash(searchParams.get("next") ?? "/dashboard/");
   const notice = searchParams.get("notice");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
   useEffect(() => {
-    if (user) router.replace(next);
-  }, [user, next, router]);
+    if (user && typeof window !== "undefined") {
+      window.location.replace(next);
+    }
+  }, [user, next]);
 
   const onCognito = async () => {
     setError(null);
@@ -68,7 +70,7 @@ function LoginForm() {
           </Button>
           <p className="mt-6 text-center text-sm text-cw-muted">
             New here?{" "}
-            <Link className="font-semibold text-cw-accent hover:text-cw-accent-hover" href="/auth/signup">
+            <Link className="font-semibold text-cw-accent hover:text-cw-accent-hover" href="/auth/signup/">
               Create an account
             </Link>
           </p>

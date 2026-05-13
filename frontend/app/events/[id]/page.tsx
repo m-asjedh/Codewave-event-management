@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { apiFetch } from "@/lib/api";
+import { withTrailingSlash } from "@/lib/app-path";
 import { useAuth } from "@/lib/auth-context";
 import { useEvents } from "@/lib/events-context";
 import { formatEventDate } from "@/lib/format-date";
@@ -82,7 +83,11 @@ export default function EventDetailPage() {
     return (
       <main className="mx-auto max-w-2xl px-4 py-20 text-center sm:px-6">
         <h1 className="font-display text-2xl font-semibold text-cw-text">Invalid link</h1>
-        <Button className="mt-6" variant="secondary" onClick={() => router.push("/events")}>
+        <Button
+          className="mt-6"
+          variant="secondary"
+          onClick={() => router.push(withTrailingSlash("/events"))}
+        >
           Back to events
         </Button>
       </main>
@@ -104,7 +109,11 @@ export default function EventDetailPage() {
         <p className="mt-2 text-sm text-cw-muted">
           {fetchError ?? "It may have been removed or the link is wrong."}
         </p>
-        <Button className="mt-6" variant="secondary" onClick={() => router.push("/events")}>
+        <Button
+          className="mt-6"
+          variant="secondary"
+          onClick={() => router.push(withTrailingSlash("/events"))}
+        >
           Back to events
         </Button>
       </main>
@@ -115,7 +124,9 @@ export default function EventDetailPage() {
 
   const onRegister = async () => {
     if (!user) {
-      router.push(`/auth/login?next=/events/${event.id}`);
+      router.push(
+        `/auth/login/?next=${encodeURIComponent(withTrailingSlash(`/events/${event.id}`))}`,
+      );
       return;
     }
     try {
@@ -170,7 +181,7 @@ export default function EventDetailPage() {
               : "Log in with your Cognito account to register."}
           </p>
           <Link
-            href="/events"
+            href="/events/"
             className="block text-center text-sm font-semibold text-cw-accent hover:text-cw-accent-hover"
           >
             ← Back to all events

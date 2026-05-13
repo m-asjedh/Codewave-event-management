@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { ApiError } from "@/lib/api";
+import { withTrailingSlash } from "@/lib/app-path";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -82,7 +83,7 @@ export function EventForm({
           bannerUrl: values.bannerUrl.trim() || defaults.bannerUrl,
         }),
       );
-      router.push("/dashboard/events");
+      router.push(withTrailingSlash("/dashboard/events"));
     } catch (e) {
       const msg =
         e && typeof e === "object" && "message" in e

@@ -1,22 +1,25 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 import Link from "next/link";
+import { withTrailingSlash } from "@/lib/app-path";
 import { useAuth } from "@/lib/auth-context";
 
 export function DashboardGate({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
-  const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
     if (loading) return;
     if (!user) {
-      const next = encodeURIComponent(pathname || "/dashboard");
-      router.replace(`/auth/login?next=${next}`);
+      const dest = withTrailingSlash(pathname || "/dashboard/");
+      const next = encodeURIComponent(dest);
+      if (typeof window !== "undefined") {
+        window.location.replace(`/auth/login/?next=${next}`);
+      }
     }
-  }, [user, loading, router, pathname]);
+  }, [user, loading, pathname]);
 
   if (loading || !user) {
     return (
@@ -24,7 +27,7 @@ export function DashboardGate({ children }: { children: React.ReactNode }) {
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-cw-border border-t-cw-accent" />
         <span>Preparing your workspace…</span>
         {!loading && !user ? (
-          <Link href="/auth/login" className="text-cw-accent hover:underline">
+          <Link href="/auth/login/" className="text-cw-accent hover:underline">
             Go to log in
           </Link>
         ) : null}

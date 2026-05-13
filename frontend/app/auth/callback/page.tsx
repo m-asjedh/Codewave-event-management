@@ -1,8 +1,9 @@
 "use client";
 
 /**
- * OAuth redirect target. react-oidc-context completes the code exchange in the root AuthProvider;
- * this page only needs to exist so `/auth/callback` is a valid route.
+ * OAuth redirect target. Do not `window.location.replace` here — `react-oidc-context`
+ * exchanges the `code` in the root `AuthProvider` and `onSigninCallback` performs a full
+ * `location.replace` to the post-login path (with trailing slash for static export).
  */
 export default function AuthCallbackPage() {
   return (

@@ -19,7 +19,7 @@ export default function EditEventPage() {
     return (
       <div className="space-y-4 py-10 text-center">
         <h1 className="font-display text-2xl font-semibold text-cw-text">Event not found</h1>
-        <LinkButton href="/dashboard/events" variant="secondary">
+        <LinkButton href="/dashboard/events/" variant="secondary">
           Back to my events
         </LinkButton>
       </div>
@@ -31,7 +31,7 @@ export default function EditEventPage() {
       <div className="space-y-4 py-10 text-center">
         <h1 className="font-display text-2xl font-semibold text-cw-text">Not your event</h1>
         <p className="text-sm text-cw-muted">You can only edit events you created.</p>
-        <LinkButton href="/dashboard/events" variant="secondary">
+        <LinkButton href="/dashboard/events/" variant="secondary">
           Back to my events
         </LinkButton>
       </div>

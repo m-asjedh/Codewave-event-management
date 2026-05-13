@@ -72,7 +72,7 @@ export default function EventsPage() {
       ) : !loading && !error ? (
         <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {sorted.map((e) => (
-            <EventCard key={e.id} event={e} href={`/events/${e.id}`} />
+            <EventCard key={e.id} event={e} href={`/events/${e.id}/`} />
           ))}
         </div>
       ) : null}

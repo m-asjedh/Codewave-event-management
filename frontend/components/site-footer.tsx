@@ -12,13 +12,13 @@ export function SiteFooter() {
           </p>
         </div>
         <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-cw-muted">
-          <Link href="/events" className="hover:text-cw-text">
+          <Link href="/events/" className="hover:text-cw-text">
             Events
           </Link>
-          <Link href="/dashboard" className="hover:text-cw-text">
+          <Link href="/dashboard/" className="hover:text-cw-text">
             Dashboard
           </Link>
-          <Link href="/auth/login" className="hover:text-cw-text">
+          <Link href="/auth/login/" className="hover:text-cw-text">
             Log in
           </Link>
         </div>

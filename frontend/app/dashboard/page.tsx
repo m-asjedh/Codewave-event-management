@@ -58,7 +58,7 @@ export default function DashboardHomePage() {
             <p className="mt-1 text-sm text-cw-muted">No events yet—create one to get started.</p>
           )}
         </div>
-        <LinkButton href="/dashboard/events/new" className="rounded-cw px-5 py-3">
+        <LinkButton href="/dashboard/events/new/" className="rounded-cw px-5 py-3">
           New event
         </LinkButton>
       </div>
@@ -67,7 +67,7 @@ export default function DashboardHomePage() {
         <div className="flex items-end justify-between gap-4">
           <h2 className="font-display text-xl font-semibold text-cw-text">Your events</h2>
           <Link
-            href="/dashboard/events"
+            href="/dashboard/events/"
             className="text-sm font-semibold text-cw-accent hover:text-cw-accent-hover"
           >
             Manage all →
@@ -86,7 +86,7 @@ export default function DashboardHomePage() {
                   <p className="text-xs text-cw-muted">{formatEventDate(e.startsAt)}</p>
                 </div>
                 <Link
-                  href={`/dashboard/events/${e.id}/edit`}
+                  href={`/dashboard/events/${e.id}/edit/`}
                   className="text-sm font-semibold text-cw-accent hover:text-cw-accent-hover"
                 >
                   Edit

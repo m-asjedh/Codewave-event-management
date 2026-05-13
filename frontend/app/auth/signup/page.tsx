@@ -1,30 +1,31 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
+import { withTrailingSlash } from "@/lib/app-path";
 import { useAuth } from "@/lib/auth-context";
 
 const AUTH_NEXT_KEY = "codewave_auth_next";
 
 export default function SignupPage() {
   const { signUp, user } = useAuth();
-  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
   useEffect(() => {
-    if (user) router.replace("/dashboard");
-  }, [user, router]);
+    if (user && typeof window !== "undefined") {
+      window.location.replace(withTrailingSlash("/dashboard"));
+    }
+  }, [user]);
 
   const onCognito = async () => {
     setError(null);
     setPending(true);
     try {
       if (typeof window !== "undefined") {
-        sessionStorage.setItem(AUTH_NEXT_KEY, "/dashboard");
+        sessionStorage.setItem(AUTH_NEXT_KEY, "/dashboard/");
       }
       await signUp("", "", "");
     } catch (err) {
@@ -59,7 +60,7 @@ export default function SignupPage() {
           </Button>
           <p className="mt-6 text-center text-sm text-cw-muted">
             Already have an account?{" "}
-            <Link className="font-semibold text-cw-accent hover:text-cw-accent-hover" href="/auth/login">
+            <Link className="font-semibold text-cw-accent hover:text-cw-accent-hover" href="/auth/login/">
               Log in
             </Link>
           </p>
