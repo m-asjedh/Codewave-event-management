@@ -50,7 +50,9 @@ export default function EditEventPage() {
         mode="edit"
         initial={event}
         createdBy={user.email}
-        onSubmit={(v) => updateEvent(event.id, v)}
+        onSubmit={async (v) => {
+          await updateEvent(event.id, v);
+        }}
       />
     </div>
   );

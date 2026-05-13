@@ -23,7 +23,9 @@ export default function NewEventPage() {
       <EventForm
         mode="create"
         createdBy={user.email}
-        onSubmit={(v) => createEvent({ ...v, createdBy: user.email })}
+        onSubmit={async (v) => {
+          await createEvent({ ...v, createdBy: user.email });
+        }}
       />
     </div>
   );

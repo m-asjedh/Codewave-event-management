@@ -8,7 +8,7 @@ import { formatEventDate } from "@/lib/format-date";
 
 export default function DashboardHomePage() {
   const { user } = useAuth();
-  const { events, registrations, myEvents } = useEvents();
+  const { events, registeredCount, myEvents } = useEvents();
   const mine = user ? myEvents(user.email) : [];
 
   const upcoming = [...events].sort(
@@ -31,7 +31,7 @@ export default function DashboardHomePage() {
         {[
           { label: "Your events", value: String(mine.length) },
           { label: "Total live", value: String(events.length) },
-          { label: "Registrations", value: String(registrations.length) },
+          { label: "Registrations", value: String(registeredCount) },
         ].map((s) => (
           <div
             key={s.label}

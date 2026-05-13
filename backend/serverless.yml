@@ -2,13 +2,15 @@ service: codewave-backend
 
 frameworkVersion: "3"
 
+useDotenv: true
+
 configValidationMode: error
 
 provider:
   name: aws
   runtime: nodejs20.x
   stage: ${opt:stage, 'dev'}
-  region: 'ap-southeast-1'
+  region: ap-southeast-1
   memorySize: 256
   timeout: 28
   httpApi:
@@ -25,6 +27,13 @@ provider:
         - PATCH
         - DELETE
         - OPTIONS
+    authorizers:
+      cognitoJwt:
+        type: jwt
+        identitySource: $request.header.Authorization
+        issuerUrl: https://cognito-idp.${self:provider.region}.amazonaws.com/${env:COGNITO_USER_POOL_ID}
+        audience:
+          - ${env:COGNITO_CLIENT_ID}
   environment:
     STAGE: ${self:provider.stage}
     AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1"
@@ -36,14 +45,117 @@ provider:
     COGNITO_CLIENT_ID: ${env:COGNITO_CLIENT_ID, ''}
     SES_EMAIL_FROM: ${env:SES_EMAIL_FROM, ''}
     SECRET_MANAGER_ARN: ${env:SECRET_MANAGER_ARN, ''}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+          Resource: "*"
+        - Effect: Allow
+          Action:
+            - sqs:SendMessage
+            - sqs:GetQueueAttributes
+          Resource:
+            - ${env:SQS_QUEUE_ARN, 'arn:aws:sqs:ap-southeast-1:000000000000:__missing__'}
+        - Effect: Allow
+          Action:
+            - sqs:ReceiveMessage
+            - sqs:DeleteMessage
+            - sqs:GetQueueAttributes
+            - sqs:GetQueueUrl
+          Resource:
+            - ${env:SQS_QUEUE_ARN, 'arn:aws:sqs:ap-southeast-1:000000000000:__missing__'}
+        - Effect: Allow
+          Action:
+            - ses:SendEmail
+            - ses:SendRawEmail
+          Resource: "*"
 
 functions:
   health:
     handler: src/handlers/health.handler
-    description: Liveness probe for API + deployment smoke test
+    description: Liveness probe
     events:
       - httpApi:
           path: /health
           method: get
 
-# Add `provider.iam.role.statements` (SQS, S3, SES, Secrets Manager) when Lambdas call those services.
+  eventsList:
+    handler: src/handlers/events/list.handler
+    events:
+      - httpApi:
+          path: /events
+          method: get
+
+  eventsGet:
+    handler: src/handlers/events/get.handler
+    events:
+      - httpApi:
+          path: /events/{id}
+          method: get
+
+  eventsCreate:
+    handler: src/handlers/events/create.handler
+    events:
+      - httpApi:
+          path: /events
+          method: post
+          authorizer:
+            name: cognitoJwt
+
+  eventsUpdate:
+    handler: src/handlers/events/update.handler
+    events:
+      - httpApi:
+          path: /events/{id}
+          method: put
+          authorizer:
+            name: cognitoJwt
+
+  eventsDelete:
+    handler: src/handlers/events/remove.handler
+    events:
+      - httpApi:
+          path: /events/{id}
+          method: delete
+          authorizer:
+            name: cognitoJwt
+
+  registrationsRegister:
+    handler: src/handlers/registrations/register.handler
+    events:
+      - httpApi:
+          path: /events/{id}/register
+          method: post
+          authorizer:
+            name: cognitoJwt
+
+  registrationsStatus:
+    handler: src/handlers/registrations/status.handler
+    events:
+      - httpApi:
+          path: /events/{id}/registration
+          method: get
+          authorizer:
+            name: cognitoJwt
+
+  registrationsMine:
+    handler: src/handlers/registrations/mine.handler
+    events:
+      - httpApi:
+          path: /me/registrations
+          method: get
+          authorizer:
+            name: cognitoJwt
+
+  processEmail:
+    handler: src/handlers/processEmail.handler
+    timeout: 60
+    reservedConcurrency: 2
+    events:
+      - sqs:
+          arn: ${env:SQS_QUEUE_ARN}
+          batchSize: 5

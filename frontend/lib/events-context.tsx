@@ -8,94 +8,81 @@ import {
   useMemo,
   useState,
 } from "react";
-import { createId } from "@/lib/id";
+import { apiFetch } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
+import { isCognitoConfigured } from "@/lib/amplify-config";
 import type { EventRecord, RegistrationRecord } from "@/lib/types";
-
-const EVENTS_KEY = "codewave_events_v1";
-const REGS_KEY = "codewave_regs_v1";
-
-const DEMO_EVENTS: EventRecord[] = [
-  {
-    id: "demo-aurora",
-    title: "Aurora Design Systems Night",
-    description:
-      "An evening of talks on tokens, accessibility, and shipping cohesive UI across web and native. Networking afterward.",
-    startsAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 5).toISOString(),
-    location: "Colombo • Lighthouse Hall",
-    bannerUrl:
-      "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=1200&q=80",
-    createdBy: "hello@codewave.app",
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "demo-tide",
-    title: "TideStack: Serverless in production",
-    description:
-      "Patterns for SQS, Lambda, and idempotent workers—plus what breaks when traffic spikes.",
-    startsAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 12).toISOString(),
-    location: "Virtual • Zoom",
-    bannerUrl:
-      "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80",
-    createdBy: "hello@codewave.app",
-    createdAt: new Date().toISOString(),
-  },
-];
-
-function loadJson<T>(key: string, fallback: T): T {
-  if (typeof window === "undefined") return fallback;
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return fallback;
-    return JSON.parse(raw) as T;
-  } catch {
-    return fallback;
-  }
-}
-
-function saveJson(key: string, value: unknown) {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(key, JSON.stringify(value));
-}
 
 type EventsContextValue = {
   events: EventRecord[];
   registrations: RegistrationRecord[];
+  /** Count of events the signed-in user has registered for (from `/me/registrations`). */
+  registeredCount: number;
+  loading: boolean;
+  error: string | null;
+  refresh: () => Promise<void>;
   getEvent: (id: string) => EventRecord | undefined;
-  createEvent: (input: Omit<EventRecord, "id" | "createdAt">) => EventRecord;
-  updateEvent: (id: string, patch: Partial<EventRecord>) => void;
-  deleteEvent: (id: string) => void;
-  registerForEvent: (eventId: string, userEmail: string, userName: string) => void;
-  isRegistered: (eventId: string, userEmail: string) => boolean;
+  createEvent: (input: Omit<EventRecord, "id" | "createdAt">) => Promise<EventRecord>;
+  updateEvent: (id: string, patch: Partial<EventRecord>) => Promise<void>;
+  deleteEvent: (id: string) => Promise<void>;
+  registerForEvent: (eventId: string) => Promise<void>;
+  isRegistered: (eventId: string) => boolean;
   myEvents: (email: string) => EventRecord[];
 };
 
 const EventsContext = createContext<EventsContextValue | null>(null);
 
 export function EventsProvider({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
   const [events, setEvents] = useState<EventRecord[]>([]);
-  const [registrations, setRegistrations] = useState<RegistrationRecord[]>([]);
-  const [hydrated, setHydrated] = useState(false);
+  const [registeredIds, setRegisteredIds] = useState<Set<string>>(new Set());
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    let ev = loadJson<EventRecord[]>(EVENTS_KEY, []);
-    if (ev.length === 0) {
-      ev = DEMO_EVENTS;
-      saveJson(EVENTS_KEY, ev);
+  const refresh = useCallback(async () => {
+    setError(null);
+    const apiConfigured = Boolean(process.env.NEXT_PUBLIC_API_URL?.trim());
+    if (!apiConfigured) {
+      setEvents([]);
+      setRegisteredIds(new Set());
+      setLoading(false);
+      setError("Set NEXT_PUBLIC_API_URL to load events from the API.");
+      return;
     }
-    setEvents(ev);
-    setRegistrations(loadJson<RegistrationRecord[]>(REGS_KEY, []));
-    setHydrated(true);
-  }, []);
+
+    setLoading(true);
+    try {
+      const list = await apiFetch<EventRecord[]>("/events", { method: "GET", auth: false });
+      setEvents(Array.isArray(list) ? list : []);
+
+      if (isCognitoConfigured() && user) {
+        try {
+          const mine = await apiFetch<{ eventIds: string[] }>("/me/registrations", {
+            method: "GET",
+            auth: true,
+          });
+          setRegisteredIds(new Set(mine.eventIds ?? []));
+        } catch {
+          setRegisteredIds(new Set());
+        }
+      } else {
+        setRegisteredIds(new Set());
+      }
+    } catch (e) {
+      const msg = e && typeof e === "object" && "message" in e ? String((e as Error).message) : "Failed to load events";
+      setError(msg);
+      setEvents([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
 
   useEffect(() => {
-    if (!hydrated) return;
-    saveJson(EVENTS_KEY, events);
-  }, [events, hydrated]);
-
-  useEffect(() => {
-    if (!hydrated) return;
-    saveJson(REGS_KEY, registrations);
-  }, [registrations, hydrated]);
+    const id = window.setTimeout(() => {
+      void refresh();
+    }, 0);
+    return () => window.clearTimeout(id);
+  }, [refresh]);
 
   const getEvent = useCallback(
     (id: string) => events.find((e) => e.id === id),
@@ -103,61 +90,68 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
   );
 
   const createEvent = useCallback(
-    (input: Omit<EventRecord, "id" | "createdAt">) => {
-      const record: EventRecord = {
-        ...input,
-        id: createId(),
-        createdAt: new Date().toISOString(),
-      };
-      setEvents((prev) => [record, ...prev]);
-      return record;
+    async (input: Omit<EventRecord, "id" | "createdAt">) => {
+      const created = await apiFetch<EventRecord>("/events", {
+        method: "POST",
+        auth: true,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: input.title,
+          description: input.description,
+          startsAt: input.startsAt,
+          location: input.location,
+          bannerUrl: input.bannerUrl,
+        }),
+      });
+      setEvents((prev) => [created, ...prev]);
+      return created;
     },
     [],
   );
 
-  const updateEvent = useCallback((id: string, patch: Partial<EventRecord>) => {
-    setEvents((prev) =>
-      prev.map((e) => (e.id === id ? { ...e, ...patch, id: e.id } : e)),
-    );
+  const updateEvent = useCallback(async (id: string, patch: Partial<EventRecord>) => {
+    const body: Record<string, string> = {};
+    if (patch.title !== undefined) body.title = patch.title;
+    if (patch.description !== undefined) body.description = patch.description;
+    if (patch.startsAt !== undefined) body.startsAt = patch.startsAt;
+    if (patch.location !== undefined) body.location = patch.location;
+    if (patch.bannerUrl !== undefined) body.bannerUrl = patch.bannerUrl;
+
+    const updated = await apiFetch<EventRecord>(`/events/${id}`, {
+      method: "PUT",
+      auth: true,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    setEvents((prev) => prev.map((e) => (e.id === id ? updated : e)));
   }, []);
 
-  const deleteEvent = useCallback((id: string) => {
+  const deleteEvent = useCallback(async (id: string) => {
+    await apiFetch(`/events/${id}`, { method: "DELETE", auth: true });
     setEvents((prev) => prev.filter((e) => e.id !== id));
-    setRegistrations((prev) => prev.filter((r) => r.eventId !== id));
+    setRegisteredIds((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
   }, []);
 
   const registerForEvent = useCallback(
-    (eventId: string, userEmail: string, userName: string) => {
-      setRegistrations((prev) => {
-        if (
-          prev.some(
-            (r) =>
-              r.eventId === eventId && r.userEmail.toLowerCase() === userEmail.toLowerCase(),
-          )
-        ) {
-          return prev;
-        }
-        const r: RegistrationRecord = {
-          id: createId(),
-          eventId,
-          userEmail: userEmail.trim().toLowerCase(),
-          userName: userName.trim(),
-          createdAt: new Date().toISOString(),
-        };
-        return [r, ...prev];
+    async (eventId: string) => {
+      await apiFetch(`/events/${eventId}/register`, {
+        method: "POST",
+        auth: true,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
       });
+      setRegisteredIds((prev) => new Set(prev).add(eventId));
     },
     [],
   );
 
   const isRegistered = useCallback(
-    (eventId: string, userEmail: string) =>
-      registrations.some(
-        (r) =>
-          r.eventId === eventId &&
-          r.userEmail.toLowerCase() === userEmail.toLowerCase(),
-      ),
-    [registrations],
+    (eventId: string) => registeredIds.has(eventId),
+    [registeredIds],
   );
 
   const myEvents = useCallback(
@@ -166,10 +160,16 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
     [events],
   );
 
+  const registrations: RegistrationRecord[] = useMemo(() => [], []);
+
   const value = useMemo(
     () => ({
       events,
       registrations,
+      registeredCount: registeredIds.size,
+      loading,
+      error,
+      refresh,
       getEvent,
       createEvent,
       updateEvent,
@@ -181,6 +181,10 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
     [
       events,
       registrations,
+      registeredIds,
+      loading,
+      error,
+      refresh,
       getEvent,
       createEvent,
       updateEvent,
@@ -191,9 +195,7 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
     ],
   );
 
-  return (
-    <EventsContext.Provider value={value}>{children}</EventsContext.Provider>
-  );
+  return <EventsContext.Provider value={value}>{children}</EventsContext.Provider>;
 }
 
 export function useEvents() {

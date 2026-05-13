@@ -3,29 +3,85 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
+import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { useEvents } from "@/lib/events-context";
 import { formatEventDate } from "@/lib/format-date";
+import type { EventRecord } from "@/lib/types";
+
+type EventFetchState =
+  | { phase: "idle" }
+  | { phase: "loading"; eventId: string }
+  | { phase: "success"; eventId: string; event: EventRecord }
+  | { phase: "error"; eventId: string; message: string };
 
 export default function EventDetailPage() {
   const params = useParams();
   const id = typeof params.id === "string" ? params.id : params.id?.[0] ?? "";
   const router = useRouter();
-  const { getEvent, registerForEvent, isRegistered } = useEvents();
+  const { events, loading: listLoading, registerForEvent, isRegistered } = useEvents();
   const { user } = useAuth();
-  const event = getEvent(id);
+  const localEvent = id ? events.find((e) => e.id === id) : undefined;
+  const [fetchState, setFetchState] = useState<EventFetchState>({ phase: "idle" });
   const [open, setOpen] = useState(false);
   const [done, setDone] = useState(false);
 
-  if (!event) {
+  useEffect(() => {
+    if (!id || localEvent || listLoading) return;
+
+    let cancelled = false;
+    (async () => {
+      await Promise.resolve();
+      if (cancelled) return;
+      setFetchState({ phase: "loading", eventId: id });
+      try {
+        const e = await apiFetch<EventRecord>(`/events/${id}`, { method: "GET", auth: false });
+        if (!cancelled) setFetchState({ phase: "success", eventId: id, event: e });
+      } catch (err) {
+        const msg =
+          err && typeof err === "object" && "message" in err ? String((err as Error).message) : "Failed to load";
+        if (!cancelled) setFetchState({ phase: "error", eventId: id, message: msg });
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id, localEvent, listLoading]);
+
+  const { event, loading, fetchError } = useMemo(() => {
+    if (!id) {
+      return { event: undefined as EventRecord | null | undefined, loading: false, fetchError: null as string | null };
+    }
+    if (localEvent) {
+      return { event: localEvent, loading: false, fetchError: null };
+    }
+    if (listLoading) {
+      return { event: undefined, loading: true, fetchError: null };
+    }
+    if (fetchState.phase === "idle") {
+      return { event: undefined, loading: true, fetchError: null };
+    }
+    if (fetchState.eventId !== id) {
+      return { event: undefined, loading: true, fetchError: null };
+    }
+    if (fetchState.phase === "loading") {
+      return { event: undefined, loading: true, fetchError: null };
+    }
+    if (fetchState.phase === "success") {
+      return { event: fetchState.event, loading: false, fetchError: null };
+    }
+    return { event: null, loading: false, fetchError: fetchState.message };
+  }, [id, localEvent, listLoading, fetchState]);
+
+  if (!id) {
     return (
       <main className="mx-auto max-w-2xl px-4 py-20 text-center sm:px-6">
-        <h1 className="font-display text-2xl font-semibold text-cw-text">Event not found</h1>
-        <p className="mt-2 text-sm text-cw-muted">It may have been removed or the link is wrong.</p>
+        <h1 className="font-display text-2xl font-semibold text-cw-text">Invalid link</h1>
         <Button className="mt-6" variant="secondary" onClick={() => router.push("/events")}>
           Back to events
         </Button>
@@ -33,16 +89,42 @@ export default function EventDetailPage() {
     );
   }
 
-  const registered = user ? isRegistered(event.id, user.email) : false;
+  if (loading) {
+    return (
+      <main className="mx-auto max-w-2xl px-4 py-20 text-center sm:px-6">
+        <p className="text-sm text-cw-muted">Loading event…</p>
+      </main>
+    );
+  }
 
-  const onRegister = () => {
+  if (!event) {
+    return (
+      <main className="mx-auto max-w-2xl px-4 py-20 text-center sm:px-6">
+        <h1 className="font-display text-2xl font-semibold text-cw-text">Event not found</h1>
+        <p className="mt-2 text-sm text-cw-muted">
+          {fetchError ?? "It may have been removed or the link is wrong."}
+        </p>
+        <Button className="mt-6" variant="secondary" onClick={() => router.push("/events")}>
+          Back to events
+        </Button>
+      </main>
+    );
+  }
+
+  const registered = user ? isRegistered(event.id) : false;
+
+  const onRegister = async () => {
     if (!user) {
       router.push(`/auth/login?next=/events/${event.id}`);
       return;
     }
-    registerForEvent(event.id, user.email, user.name);
-    setDone(true);
-    setOpen(false);
+    try {
+      await registerForEvent(event.id);
+      setDone(true);
+      setOpen(false);
+    } catch {
+      setOpen(false);
+    }
   };
 
   return (
@@ -76,7 +158,7 @@ export default function EventDetailPage() {
         <aside className="h-fit space-y-4 rounded-cw border border-cw-border bg-cw-surface p-5 shadow-cw-sm">
           {done || registered ? (
             <div className="rounded-cw-sm border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-900 dark:text-emerald-100">
-              You&apos;re registered. A confirmation email would be queued via SQS in production.
+              You&apos;re registered. Check your email for a confirmation from SES (if the queue worker ran).
             </div>
           ) : null}
           <Button className="w-full rounded-cw py-3 text-base" onClick={() => setOpen(true)}>
@@ -84,8 +166,8 @@ export default function EventDetailPage() {
           </Button>
           <p className="text-xs leading-relaxed text-cw-muted">
             {user
-              ? "We’ll reserve your seat locally. Wire POST /events/register to persist server-side."
-              : "Log in to register. Demo auth accepts any password."}
+              ? "Confirm to save your registration and queue a confirmation email (SES + SQS)."
+              : "Log in with your Cognito account to register."}
           </p>
           <Link
             href="/events"

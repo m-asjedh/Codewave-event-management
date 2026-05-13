@@ -4,7 +4,7 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
+  useLayoutEffect,
   useMemo,
   useState,
 } from "react";
@@ -22,7 +22,9 @@ const STORAGE_KEY = "codewave_theme_v1";
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>("light");
 
-  useEffect(() => {
+  useLayoutEffect(() => {
+    /* One-time hydration from localStorage / system preference (avoids SSR/client mismatch if we read window in useState). */
+    /* eslint-disable react-hooks/set-state-in-effect */
     const stored = localStorage.getItem(STORAGE_KEY) as Theme | null;
     if (stored === "light" || stored === "dark") {
       setThemeState(stored);
@@ -33,6 +35,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const initial = prefersDark ? "dark" : "light";
     setThemeState(initial);
     document.documentElement.classList.toggle("dark", initial === "dark");
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, []);
 
   const setTheme = useCallback((t: Theme) => {

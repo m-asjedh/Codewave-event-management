@@ -14,6 +14,7 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams.get("next") ?? "/dashboard";
+  const notice = searchParams.get("notice");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -43,10 +44,17 @@ function LoginForm() {
         <CardHeader>
           <h1 className="font-display text-2xl font-semibold text-cw-text">Welcome back</h1>
           <p className="mt-1 text-sm text-cw-muted">
-            Demo login stores a session in your browser. Replace with Cognito when ready.
+            Sign in with your Cognito user (email + password). The app sends your ID token to the API.
           </p>
         </CardHeader>
         <CardBody>
+          {notice === "account-created" || notice === "confirmed" ? (
+            <p className="mb-4 rounded-cw-sm border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-900 dark:text-emerald-100">
+              {notice === "confirmed"
+                ? "Email verified. Sign in to continue."
+                : "Account created. Sign in when you are ready (or after verifying your email if required)."}
+            </p>
+          ) : null}
           <form className="space-y-4" onSubmit={onSubmit}>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -71,7 +79,7 @@ function LoginForm() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
-              <p className="text-xs text-cw-muted">Any password works in this preview.</p>
+              <p className="text-xs text-cw-muted">Use the password you set at signup.</p>
             </div>
             {error ? (
               <p className="text-sm font-medium text-red-600 dark:text-red-400" role="alert">

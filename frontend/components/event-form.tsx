@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import type { ApiError } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -30,12 +31,12 @@ const defaults: EventFormValues = {
 export function EventForm({
   mode,
   initial,
-  createdBy: _createdBy,
+  createdBy,
   onSubmit,
 }: {
   mode: "create" | "edit";
   initial?: EventRecord;
-  /** Reserved for future “organizer” display; server will set createdBy. */
+  /** Shown for context; the API sets organizer from the signed-in user. */
   createdBy: string;
   onSubmit: (values: {
     title: string;
@@ -43,7 +44,7 @@ export function EventForm({
     startsAt: string;
     location: string;
     bannerUrl: string;
-  }) => void;
+  }) => void | Promise<void>;
 }) {
   const router = useRouter();
   const [values, setValues] = useState<EventFormValues>(() =>
@@ -59,7 +60,7 @@ export function EventForm({
   );
   const [error, setError] = useState<string | null>(null);
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     if (!values.title.trim()) {
@@ -72,16 +73,22 @@ export function EventForm({
     }
     try {
       const startsAt = fromDatetimeLocalValue(values.startsAt);
-      onSubmit({
-        title: values.title.trim(),
-        description: values.description.trim(),
-        startsAt,
-        location: values.location.trim(),
-        bannerUrl: values.bannerUrl.trim() || defaults.bannerUrl,
-      });
+      await Promise.resolve(
+        onSubmit({
+          title: values.title.trim(),
+          description: values.description.trim(),
+          startsAt,
+          location: values.location.trim(),
+          bannerUrl: values.bannerUrl.trim() || defaults.bannerUrl,
+        }),
+      );
       router.push("/dashboard/events");
-    } catch {
-      setError("Invalid date/time.");
+    } catch (e) {
+      const msg =
+        e && typeof e === "object" && "message" in e
+          ? String((e as ApiError).message)
+          : "Failed to save.";
+      setError(msg);
     }
   };
 
@@ -89,6 +96,9 @@ export function EventForm({
     <Card>
       <CardBody>
         <form className="space-y-5" onSubmit={submit}>
+          <p className="text-xs text-cw-muted">
+            Organizer account: <span className="font-medium text-cw-text">{createdBy}</span>
+          </p>
           <div className="space-y-2">
             <Label htmlFor="title">Title</Label>
             <Input

@@ -9,6 +9,11 @@
     "info": "serverless info",
     "print": "serverless print"
   },
+  "dependencies": {
+    "@aws-sdk/client-ses": "^3.826.0",
+    "@aws-sdk/client-sqs": "^3.826.0",
+    "mongoose": "^8.14.0"
+  },
   "devDependencies": {
     "serverless": "^3.40.0"
   }
