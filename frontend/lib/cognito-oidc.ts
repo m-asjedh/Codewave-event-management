@@ -6,11 +6,7 @@ function regionFromPoolId(poolId: string): string {
   return i > 0 ? poolId.slice(0, i) : "ap-southeast-1";
 }
 
-function cognitoDomain(poolId: string, region: string): string {
-  const suffix = poolId.slice(poolId.indexOf("_") + 1).toLowerCase();
-  return `https://${region}-${suffix}.auth.${region}.amazoncognito.com`;
-}
-
+/** Build Cognito User Pool OIDC settings (same shape as AWS Cognito “Quick setup” / react-oidc-context). */
 export function getOidcUserManagerSettings(): UserManagerSettings | null {
   const poolId =
     process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID ??
@@ -23,8 +19,6 @@ export function getOidcUserManagerSettings(): UserManagerSettings | null {
   const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "").replace(/\/$/, "");
   if (!poolId || !clientId || !siteUrl) return null;
   const region = regionFromPoolId(poolId);
-  const domain = cognitoDomain(poolId, region);
-
   return {
     authority: `https://cognito-idp.${region}.amazonaws.com/${poolId}`,
     client_id: clientId,
@@ -33,13 +27,6 @@ export function getOidcUserManagerSettings(): UserManagerSettings | null {
     response_type: "code",
     scope: "openid email",
     automaticSilentRenew: true,
-    metadata: {
-      issuer: `https://cognito-idp.${region}.amazonaws.com/${poolId}`,
-      authorization_endpoint: `${domain}/oauth2/authorize`,
-      token_endpoint: `${domain}/oauth2/token`,
-      end_session_endpoint: `${domain}/logout`,
-      jwks_uri: `https://cognito-idp.${region}.amazonaws.com/${poolId}/.well-known/jwks.json`,
-    },
     userStore:
       typeof window !== "undefined"
         ? new WebStorageStateStore({ store: window.localStorage })
