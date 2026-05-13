@@ -19,7 +19,7 @@ export function getOidcUserManagerSettings(): UserManagerSettings | null {
     redirect_uri: `${siteUrl}/auth/callback/`,
     post_logout_redirect_uri: `${siteUrl}/`,
     response_type: "code",
-    scope: "openid email profile",
+    scope: "openid email",
     automaticSilentRenew: true,
     userStore:
       typeof window !== "undefined"
