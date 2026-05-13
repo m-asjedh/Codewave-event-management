@@ -4,12 +4,12 @@ Monorepo for the CodeWave events platform: a **Next.js** frontend, **Serverless 
 
 ## Layout
 
-| Path | Purpose |
-|------|---------|
-| `frontend/` | Next.js app — UI, event discovery, dashboard, Cognito (Amplify) auth, API-backed events. |
-| `backend/` | AWS Lambda / API Gateway via Serverless — handlers, `serverless.yml` when present. |
-| `.github/workflows/` | CI/CD — `deploy-backend.yml`, `deploy-frontend.yml`. |
-| `project-spec.md` | Architecture and MVP scope. |
+| Path                 | Purpose                                                                                  |
+| -------------------- | ---------------------------------------------------------------------------------------- |
+| `frontend/`          | Next.js app — UI, event discovery, dashboard, Cognito (Amplify) auth, API-backed events. |
+| `backend/`           | AWS Lambda / API Gateway via Serverless — handlers, `serverless.yml` when present.       |
+| `.github/workflows/` | CI/CD — `deploy-backend.yml`, `deploy-frontend.yml`.                                     |
+| `project-spec.md`    | Architecture and MVP scope.                                                              |
 
 ## Prerequisites
 
@@ -49,9 +49,9 @@ Copy env templates (do **not** commit real secrets):
 
 Set these in **`frontend/.env.local`** and as GitHub secrets for production builds:
 
-| Variable | Purpose |
-|----------|---------|
-| `NEXT_PUBLIC_COGNITO_USER_POOL_ID` | Cognito User Pool ID (same region as the pool). |
+| Variable                                  | Purpose                                               |
+| ----------------------------------------- | ----------------------------------------------------- |
+| `NEXT_PUBLIC_COGNITO_USER_POOL_ID`        | Cognito User Pool ID (same region as the pool).       |
 | `NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID` | App client ID (no client secret — public SPA client). |
 
 The app calls `Amplify.configure` on load and sends the **Cognito ID token** as `Authorization: Bearer …` on authenticated API requests (`frontend/lib/api.ts`).
@@ -87,14 +87,14 @@ Workflow: **`.github/workflows/deploy-frontend.yml`** (runs when `frontend/**` c
 
 **Secrets:**
 
-| Secret | Purpose |
-|--------|---------|
-| `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | Deploy user (needs S3 sync + optional invalidation). |
-| `FRONTEND_S3_BUCKET` | Target bucket for `aws s3 sync out/`. |
-| `FRONTEND_CLOUDFRONT_DISTRIBUTION_ID` | Optional; invalidates `/*` after upload. |
-| `NEXT_PUBLIC_API_URL` | **API HTTP URL** (no trailing slash); baked into static build. |
-| `NEXT_PUBLIC_COGNITO_USER_POOL_ID` | Cognito User Pool ID for Amplify in the browser. |
-| `NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID` | Cognito app client ID (public client, no secret). |
+| Secret                                        | Purpose                                                        |
+| --------------------------------------------- | -------------------------------------------------------------- |
+| `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | Deploy user (needs S3 sync + optional invalidation).           |
+| `FRONTEND_S3_BUCKET`                          | Target bucket for `aws s3 sync out/`.                          |
+| `FRONTEND_CLOUDFRONT_DISTRIBUTION_ID`         | Optional; invalidates `/*` after upload.                       |
+| `NEXT_PUBLIC_API_URL`                         | **API HTTP URL** (no trailing slash); baked into static build. |
+| `NEXT_PUBLIC_COGNITO_USER_POOL_ID`            | Cognito User Pool ID for Amplify in the browser.               |
+| `NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID`     | Cognito app client ID (public client, no secret).              |
 
 ### Static export + dynamic URLs
 

@@ -2,8 +2,8 @@
 
 import { Amplify } from "aws-amplify";
 
-const poolId = process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID ?? "";
-const clientId = process.env.NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID ?? "";
+const poolId = process.env.COGNITO_USER_POOL_ID ?? "";
+const clientId = process.env.COGNITO_CLIENT_ID ?? "";
 
 let configured = false;
 
@@ -12,7 +12,7 @@ export function configureAmplify() {
   configured = true;
   if (!poolId || !clientId) {
     console.warn(
-      "Cognito not configured: set NEXT_PUBLIC_COGNITO_USER_POOL_ID and NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID",
+      "Cognito not configured: set COGNITO_USER_POOL_ID and COGNITO_CLIENT_ID (see next.config env)",
     );
     return;
   }
