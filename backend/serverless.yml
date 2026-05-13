@@ -154,7 +154,6 @@ functions:
   processEmail:
     handler: src/handlers/processEmail.handler
     timeout: 60
-    reservedConcurrency: 2
     events:
       - sqs:
           arn: ${env:SQS_QUEUE_ARN}
