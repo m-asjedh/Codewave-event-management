@@ -89,7 +89,7 @@ flowchart TB
 - **Registration** — signed-in users register for an event; duplicate registration is handled gracefully; **confirmation email** is queued, not sent inline.
 - **My registrations** — list event IDs the current user registered for; per-event **registration status** check.
 - **Scheduled reminders** — daily job queues **24h-before** reminder emails for registered attendees.
-- **Banner images** — organizers can **upload** JPEG/PNG/WebP to **S3** (presigned URL) or paste an external image URL; event cards use `next/image` with allowed hosts including regional S3 URLs.
+- **Banner images** — organizers **upload** to **S3**; **`bannerUrl`** in the database is the public S3 object URL returned after upload.
 - **Health check** — `GET /health` for monitoring.
 
 Environment variable **`SECRET_MANAGER_ARN`** is present in Serverless config for optional use. **`S3_BUCKET_NAME`** is required for **banner uploads** (`POST /uploads/banner-presign`).
@@ -111,7 +111,7 @@ Base URL: **`https://<api-id>.execute-api.ap-southeast-1.amazonaws.com`** (exact
 | `GET` | `/me/registrations` | Cognito JWT |
 | `POST` | `/uploads/banner-presign` | Cognito JWT |
 
-Request body for `POST /events` / `PUT /events/{id}`: JSON with at least `title`, `startsAt` (ISO date), `location`; optional `description`, `bannerUrl`. **Authorization** header: `Bearer <Cognito ID token>`.
+Request body for `POST /events` / `PUT /events/{id}`: JSON with at least `title`, `startsAt` (ISO date), `location`, **`bannerUrl`** (required **S3** URL under your bucket’s `banners/` prefix from **`POST /uploads/banner-presign`**); optional `description`. **Authorization** header: `Bearer <Cognito ID token>`.
 
 **`POST /uploads/banner-presign`** — JSON body `{ "contentType": "image/jpeg" | "image/png" | "image/webp" }`. Response: `{ "uploadUrl", "publicUrl", "key", "expiresIn", "contentType" }`. The client must `PUT` the raw file bytes to `uploadUrl` with header `Content-Type` exactly equal to `contentType`.
 

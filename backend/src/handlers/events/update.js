@@ -14,6 +14,12 @@ import {
   getJwtClaims,
 } from "../../lib/http.js";
 
+function isOurS3BannerUrl(url, bucket, region) {
+  if (!url || typeof url !== "string") return false;
+  const prefix = `https://${bucket}.s3.${region}.amazonaws.com/banners/`;
+  return url.trim().startsWith(prefix);
+}
+
 function serialize(doc) {
   return {
     id: doc._id.toString(),
@@ -59,8 +65,18 @@ export const handler = async (event) => {
       if (typeof location !== "string" || !location.trim()) return badRequest("location invalid");
       existing.location = location.trim();
     }
-    if (bannerUrl !== undefined)
-      existing.bannerUrl = typeof bannerUrl === "string" ? bannerUrl : "";
+    if (bannerUrl !== undefined) {
+      const bucket = process.env.S3_BUCKET_NAME?.trim();
+      const region = process.env.AWS_REGION || "ap-southeast-1";
+      if (!bucket) {
+        return badRequest("S3_BUCKET_NAME is not configured; banner uploads are unavailable.");
+      }
+      const trimmed = typeof bannerUrl === "string" ? bannerUrl.trim() : "";
+      if (!isOurS3BannerUrl(trimmed, bucket, region)) {
+        return badRequest("Banner must be an uploaded image (S3 banners path).");
+      }
+      existing.bannerUrl = trimmed;
+    }
 
     await existing.save();
     return json(200, serialize(existing.toObject()));

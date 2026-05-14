@@ -121,6 +121,7 @@ export default function EventDetailPage() {
   }
 
   const registered = user ? isRegistered(event.id) : false;
+  const banner = event.bannerUrl?.trim() ?? "";
 
   const onRegister = async () => {
     if (!user) {
@@ -141,7 +142,9 @@ export default function EventDetailPage() {
   return (
     <main>
       <div className="relative h-[min(52vh,420px)] w-full overflow-hidden bg-cw-surface-2">
-        <Image src={event.bannerUrl} alt={event.title} fill priority className="object-cover" />
+        {banner ? (
+          <Image src={banner} alt={event.title} fill priority className="object-cover" />
+        ) : null}
         <div className="absolute inset-0 bg-gradient-to-t from-cw-bg via-cw-bg/40 to-transparent dark:from-[#070b12] dark:via-[#070b12]/50" />
         <div className="absolute inset-x-0 bottom-0 mx-auto max-w-4xl px-4 pb-10 sm:px-6">
           <Badge className="border-0 bg-white/20 text-white backdrop-blur-md dark:bg-white/10">

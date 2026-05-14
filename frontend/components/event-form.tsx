@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { fromDatetimeLocalValue, toDatetimeLocalValue } from "@/lib/datetime-local";
 import type { EventRecord } from "@/lib/types";
+import Image from "next/image";
 
 export type EventFormValues = {
   title: string;
@@ -26,12 +27,16 @@ const defaults: EventFormValues = {
   description: "",
   startsAt: toDatetimeLocalValue(new Date(Date.now() + 86400000)),
   location: "",
-  bannerUrl:
-    "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1200&q=80",
+  bannerUrl: "",
 };
 
 const MAX_BANNER_BYTES = 5 * 1024 * 1024;
 const ALLOWED_BANNER_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
+
+function looksLikeS3BannerUrl(url: string) {
+  const u = url.trim();
+  return u.startsWith("https://") && u.includes(".s3.") && u.includes("/banners/");
+}
 
 type BannerPresignResponse = {
   uploadUrl: string;
@@ -128,6 +133,10 @@ export function EventForm({
       setError("Location is required.");
       return;
     }
+    if (!values.bannerUrl.trim() || !looksLikeS3BannerUrl(values.bannerUrl)) {
+      setError("Upload a banner image to S3 (JPEG, PNG, or WebP) before saving.");
+      return;
+    }
     try {
       const startsAt = fromDatetimeLocalValue(values.startsAt);
       await Promise.resolve(
@@ -136,7 +145,7 @@ export function EventForm({
           description: values.description.trim(),
           startsAt,
           location: values.location.trim(),
-          bannerUrl: values.bannerUrl.trim() || defaults.bannerUrl,
+          bannerUrl: values.bannerUrl.trim(),
         }),
       );
       router.push(withTrailingSlash("/dashboard/events"));
@@ -198,6 +207,9 @@ export function EventForm({
           </div>
           <div className="space-y-2">
             <span className="text-sm font-medium text-cw-text">Banner image</span>
+            <p className="text-xs text-cw-muted">
+              Required. After upload, the S3 object URL is saved as <code className="text-cw-text">bannerUrl</code>.
+            </p>
             <div className="flex flex-wrap items-center gap-3">
               <input
                 ref={bannerFileRef}
@@ -219,18 +231,17 @@ export function EventForm({
               </Button>
               <span className="text-xs text-cw-muted">JPEG, PNG, or WebP · max 5 MB</span>
             </div>
-            <Label htmlFor="banner">Or paste image URL</Label>
-            <Input
-              id="banner"
-              type="url"
-              value={values.bannerUrl}
-              onChange={(e) => setValues((v) => ({ ...v, bannerUrl: e.target.value }))}
-              placeholder="https://… (or upload above)"
-            />
-            <p className="text-xs text-cw-muted">
-              Uploads go to your S3 bucket under <code className="text-cw-text">banners/&lt;user&gt;/</code>.
-              Objects must be publicly readable for this URL to work in the app (see README).
-            </p>
+            {values.bannerUrl.trim() ? (
+              <div className="relative mt-2 aspect-[16/10] w-full max-w-md overflow-hidden rounded-cw border border-cw-border bg-cw-surface-2">
+                <Image
+                  src={values.bannerUrl.trim()}
+                  alt="Banner preview"
+                  fill
+                  className="object-cover"
+                  sizes="448px"
+                />
+              </div>
+            ) : null}
           </div>
           {error ? (
             <p className="text-sm font-medium text-red-600 dark:text-red-400" role="alert">

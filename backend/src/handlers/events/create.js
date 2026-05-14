@@ -11,6 +11,12 @@ import {
   getJwtClaims,
 } from "../../lib/http.js";
 
+function isOurS3BannerUrl(url, bucket, region) {
+  if (!url || typeof url !== "string") return false;
+  const prefix = `https://${bucket}.s3.${region}.amazonaws.com/banners/`;
+  return url.trim().startsWith(prefix);
+}
+
 function serialize(doc) {
   return {
     id: doc._id.toString(),
@@ -39,6 +45,17 @@ export const handler = async (event) => {
   const startDate = new Date(startsAt);
   if (Number.isNaN(startDate.getTime())) return badRequest("startsAt must be a valid ISO date");
 
+  const bucket = process.env.S3_BUCKET_NAME?.trim();
+  const region = process.env.AWS_REGION || "ap-southeast-1";
+  const trimmedBanner =
+    typeof bannerUrl === "string" ? bannerUrl.trim() : "";
+  if (!bucket) {
+    return badRequest("S3_BUCKET_NAME is not configured; banner uploads are unavailable.");
+  }
+  if (!isOurS3BannerUrl(trimmedBanner, bucket, region)) {
+    return badRequest("Upload a banner image (S3) before publishing.");
+  }
+
   try {
     await connectMongo();
     const doc = await Event.create({
@@ -46,7 +63,7 @@ export const handler = async (event) => {
       description: typeof description === "string" ? description : "",
       startsAt: startDate,
       location: location.trim(),
-      bannerUrl: typeof bannerUrl === "string" ? bannerUrl : "",
+      bannerUrl: trimmedBanner,
       createdBySub: claims.sub,
       createdByEmail: claims.email || claims.sub,
     });
