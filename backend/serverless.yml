@@ -17,6 +17,7 @@ provider:
     cors:
       allowedOrigins:
         - https://main.d2r4vrx4lrmfru.amplifyapp.com
+        - http://localhost:3000
       allowedHeaders:
         - Content-Type
         - Authorization
@@ -72,6 +73,11 @@ provider:
             - ses:SendEmail
             - ses:SendRawEmail
           Resource: "*"
+        - Effect: Allow
+          Action:
+            - s3:PutObject
+          Resource:
+            - arn:aws:s3:::${env:S3_BUCKET_NAME, 'codewave-banners-bucket'}/banners/*
 
 functions:
   health:
@@ -147,6 +153,16 @@ functions:
       - httpApi:
           path: /me/registrations
           method: get
+          authorizer:
+            name: cognitoJwt
+
+  uploadsBannerPresign:
+    handler: src/handlers/uploads/bannerPresign.handler
+    description: Presigned PUT for event banner images (S3)
+    events:
+      - httpApi:
+          path: /uploads/banner-presign
+          method: post
           authorizer:
             name: cognitoJwt
 

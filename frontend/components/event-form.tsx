@@ -1,8 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { ApiError } from "@/lib/api";
+import { apiFetch } from "@/lib/api";
 import { withTrailingSlash } from "@/lib/app-path";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody } from "@/components/ui/card";
@@ -27,6 +28,17 @@ const defaults: EventFormValues = {
   location: "",
   bannerUrl:
     "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1200&q=80",
+};
+
+const MAX_BANNER_BYTES = 5 * 1024 * 1024;
+const ALLOWED_BANNER_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
+
+type BannerPresignResponse = {
+  uploadUrl: string;
+  publicUrl: string;
+  key: string;
+  expiresIn: number;
+  contentType: string;
 };
 
 export function EventForm({
@@ -60,6 +72,50 @@ export function EventForm({
       : defaults,
   );
   const [error, setError] = useState<string | null>(null);
+  const [uploadingBanner, setUploadingBanner] = useState(false);
+  const bannerFileRef = useRef<HTMLInputElement>(null);
+
+  const onBannerFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setError(null);
+
+    if (!ALLOWED_BANNER_TYPES.includes(file.type as (typeof ALLOWED_BANNER_TYPES)[number])) {
+      setError("Banner must be JPEG, PNG, or WebP.");
+      return;
+    }
+    if (file.size > MAX_BANNER_BYTES) {
+      setError("Banner image must be 5 MB or smaller.");
+      return;
+    }
+
+    setUploadingBanner(true);
+    try {
+      const presign = await apiFetch<BannerPresignResponse>("/uploads/banner-presign", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contentType: file.type }),
+      });
+      const putRes = await fetch(presign.uploadUrl, {
+        method: "PUT",
+        body: file,
+        headers: { "Content-Type": presign.contentType },
+      });
+      if (!putRes.ok) {
+        throw new Error(`Upload failed (${putRes.status}). Check S3 bucket CORS and policy.`);
+      }
+      setValues((v) => ({ ...v, bannerUrl: presign.publicUrl }));
+    } catch (err) {
+      const msg =
+        err && typeof err === "object" && "message" in err
+          ? String((err as ApiError).message)
+          : "Upload failed.";
+      setError(msg);
+    } finally {
+      setUploadingBanner(false);
+    }
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -141,16 +197,39 @@ export function EventForm({
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="banner">Banner image URL</Label>
+            <span className="text-sm font-medium text-cw-text">Banner image</span>
+            <div className="flex flex-wrap items-center gap-3">
+              <input
+                ref={bannerFileRef}
+                id="banner-file"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="sr-only"
+                onChange={onBannerFile}
+                disabled={uploadingBanner}
+              />
+              <Button
+                type="button"
+                variant="secondary"
+                disabled={uploadingBanner}
+                onClick={() => bannerFileRef.current?.click()}
+                className="rounded-cw"
+              >
+                {uploadingBanner ? "Uploading…" : "Upload to S3"}
+              </Button>
+              <span className="text-xs text-cw-muted">JPEG, PNG, or WebP · max 5 MB</span>
+            </div>
+            <Label htmlFor="banner">Or paste image URL</Label>
             <Input
               id="banner"
               type="url"
               value={values.bannerUrl}
               onChange={(e) => setValues((v) => ({ ...v, bannerUrl: e.target.value }))}
-              placeholder="https://…"
+              placeholder="https://… (or upload above)"
             />
             <p className="text-xs text-cw-muted">
-              Swap for S3 presigned uploads when the media API is ready.
+              Uploads go to your S3 bucket under <code className="text-cw-text">banners/&lt;user&gt;/</code>.
+              Objects must be publicly readable for this URL to work in the app (see README).
             </p>
           </div>
           {error ? (
@@ -159,7 +238,7 @@ export function EventForm({
             </p>
           ) : null}
           <div className="flex flex-wrap gap-3">
-            <Button type="submit" className="rounded-cw px-6">
+            <Button type="submit" className="rounded-cw px-6" disabled={uploadingBanner}>
               {mode === "create" ? "Publish event" : "Save changes"}
             </Button>
             <Button type="button" variant="secondary" onClick={() => router.back()}>
