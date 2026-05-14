@@ -15,46 +15,7 @@ Monorepo for the CodeWave events platform: a **Next.js** frontend on **AWS Ampli
 
 CodeWave runs as a **serverless** stack in **`ap-southeast-1`**: browsers talk to **API Gateway HTTP API** and **Cognito**; Lambdas use **MongoDB** (Atlas URI), **S3** (banner uploads), **SQS**, and **SES**; the UI is a static **Next.js** export on **Amplify Hosting**. Backend deploys from **GitHub Actions** on push to `main` (`npx serverless deploy --stage prod`).
 
-```mermaid
-flowchart TB
-  subgraph users[Users]
-    Browser[Browser]
-  end
-
-  subgraph aws[AWS ap-southeast-1]
-    Amplify[Amplify Hosting - Next.js static]
-    Cognito[Cognito User Pool]
-    HttpApi[API Gateway HTTP API]
-    LambdaApi[Lambda - REST handlers]
-    LambdaCron[Lambda - dailyReminder]
-    LambdaMail[Lambda - processEmail]
-    EB[EventBridge scheduled rule]
-    Queue[SQS]
-    SES[SES]
-    S3[S3 - event banners]
-    CW[CloudWatch Logs]
-  end
-
-  subgraph data[Data]
-    Mongo[(MongoDB Atlas)]
-  end
-
-  Browser --> Amplify
-  Browser --> Cognito
-  Browser -->|"Bearer ID token"| HttpApi
-  HttpApi --> LambdaApi
-  LambdaApi --> Mongo
-  Browser -->|"presigned PUT"| S3
-  LambdaCron --> EB
-  EB --> LambdaCron
-  LambdaCron --> Queue
-  LambdaApi -->|"register confirmation"| Queue
-  Queue --> LambdaMail
-  LambdaMail --> SES
-  LambdaApi --> CW
-  LambdaCron --> CW
-  LambdaMail --> CW
-```
+<img width="1651" height="824" alt="architecture-diagram" src="https://github.com/user-attachments/assets/8dcc3af6-a3a1-4642-8960-e7abb6babfdf" />
 
 ### AWS services used
 
