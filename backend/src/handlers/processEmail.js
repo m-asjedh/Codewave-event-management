@@ -1,10 +1,10 @@
 "use strict";
 
-const { SESClient, SendEmailCommand } = require("@aws-sdk/client-ses");
+import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
 
 const ses = new SESClient({});
 
-exports.handler = async (event) => {
+export const handler = async (event) => {
   const from = process.env.SES_EMAIL_FROM;
   if (!from) {
     console.error("SES_EMAIL_FROM missing");

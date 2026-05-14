@@ -51,7 +51,7 @@ function getJwtClaims(event) {
   };
 }
 
-module.exports = {
+export {
   json,
   badRequest,
   unauthorized,

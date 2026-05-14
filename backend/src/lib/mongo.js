@@ -1,13 +1,13 @@
 "use strict";
 
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 let cached = global.__codewave_mongoose;
 
 /**
  * Reuse connection across Lambda invocations.
  */
-async function connectMongo() {
+export async function connectMongo() {
   const uri = process.env.MONGODB_URI;
   if (!uri) {
     throw new Error("MONGODB_URI is not configured");
@@ -24,5 +24,3 @@ async function connectMongo() {
   cached.conn = await cached.promise;
   return cached.conn;
 }
-
-module.exports = { connectMongo };

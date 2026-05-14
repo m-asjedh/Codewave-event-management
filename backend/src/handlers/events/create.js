@@ -1,15 +1,15 @@
 "use strict";
 
-const { connectMongo } = require("../../lib/mongo");
-const Event = require("../../models/Event");
-const {
+import { connectMongo } from "../../lib/mongo.js";
+import Event from "../../models/Event.js";
+import {
   json,
   badRequest,
   unauthorized,
   serverError,
   parseBody,
   getJwtClaims,
-} = require("../../lib/http");
+} from "../../lib/http.js";
 
 function serialize(doc) {
   return {
@@ -24,7 +24,7 @@ function serialize(doc) {
   };
 }
 
-exports.handler = async (event) => {
+export const handler = async (event) => {
   const claims = getJwtClaims(event);
   if (!claims) return unauthorized();
 

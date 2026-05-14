@@ -1,21 +1,21 @@
 "use strict";
 
-const mongoose = require("mongoose");
-const { SQSClient, SendMessageCommand } = require("@aws-sdk/client-sqs");
-const { connectMongo } = require("../../lib/mongo");
-const Event = require("../../models/Event");
-const Registration = require("../../models/Registration");
-const {
+import mongoose from "mongoose";
+import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
+import { connectMongo } from "../../lib/mongo.js";
+import Event from "../../models/Event.js";
+import Registration from "../../models/Registration.js";
+import {
   json,
   badRequest,
   unauthorized,
   serverError,
   getJwtClaims,
-} = require("../../lib/http");
+} from "../../lib/http.js";
 
 const sqs = new SQSClient({});
 
-exports.handler = async (event) => {
+export const handler = async (event) => {
   const claims = getJwtClaims(event);
   if (!claims) return unauthorized();
 

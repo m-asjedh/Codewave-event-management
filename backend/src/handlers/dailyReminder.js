@@ -1,13 +1,13 @@
 "use strict";
 
-const { SQSClient, SendMessageCommand } = require("@aws-sdk/client-sqs");
-const { connectMongo } = require("../lib/mongo");
-const Event = require("../models/Event");
-const Registration = require("../models/Registration");
+import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
+import { connectMongo } from "../lib/mongo.js";
+import Event from "../models/Event.js";
+import Registration from "../models/Registration.js";
 
 const sqs = new SQSClient({});
 
-exports.handler = async () => {
+export const handler = async () => {
   const queueUrl = process.env.SQS_QUEUE_URL;
   if (!queueUrl) {
     console.error("SQS_QUEUE_URL missing");

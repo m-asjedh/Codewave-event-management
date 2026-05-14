@@ -1,6 +1,6 @@
 "use strict";
 
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const EventSchema = new mongoose.Schema(
   {
@@ -31,5 +31,4 @@ EventSchema.set("toJSON", {
   },
 });
 
-module.exports =
-  mongoose.models.Event || mongoose.model("Event", EventSchema, "events");
+export default mongoose.models.Event || mongoose.model("Event", EventSchema, "events");

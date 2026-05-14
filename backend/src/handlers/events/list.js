@@ -1,8 +1,8 @@
 "use strict";
 
-const { connectMongo } = require("../../lib/mongo");
-const Event = require("../../models/Event");
-const { json, serverError } = require("../../lib/http");
+import { connectMongo } from "../../lib/mongo.js";
+import Event from "../../models/Event.js";
+import { json, serverError } from "../../lib/http.js";
 
 function serialize(doc) {
   return {
@@ -17,7 +17,7 @@ function serialize(doc) {
   };
 }
 
-exports.handler = async () => {
+export const handler = async () => {
   try {
     await connectMongo();
     const rows = await Event.find().sort({ startsAt: 1 }).lean();

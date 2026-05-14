@@ -1,6 +1,6 @@
 "use strict";
 
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const RegistrationSchema = new mongoose.Schema(
   {
@@ -27,6 +27,7 @@ RegistrationSchema.set("toJSON", {
   },
 });
 
-module.exports =
+export default (
   mongoose.models.Registration ||
-  mongoose.model("Registration", RegistrationSchema, "registrations");
+  mongoose.model("Registration", RegistrationSchema, "registrations")
+);

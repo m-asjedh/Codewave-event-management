@@ -1,12 +1,12 @@
 "use strict";
 
-const mongoose = require("mongoose");
-const { connectMongo } = require("../../lib/mongo");
-const Event = require("../../models/Event");
-const Registration = require("../../models/Registration");
-const { json, unauthorized, forbidden, notFound, serverError, getJwtClaims } = require("../../lib/http");
+import mongoose from "mongoose";
+import { connectMongo } from "../../lib/mongo.js";
+import Event from "../../models/Event.js";
+import Registration from "../../models/Registration.js";
+import { json, unauthorized, forbidden, notFound, serverError, getJwtClaims } from "../../lib/http.js";
 
-exports.handler = async (event) => {
+export const handler = async (event) => {
   const claims = getJwtClaims(event);
   if (!claims) return unauthorized();
 

@@ -1,9 +1,9 @@
 "use strict";
 
-const mongoose = require("mongoose");
-const { connectMongo } = require("../../lib/mongo");
-const Event = require("../../models/Event");
-const { json, notFound, serverError } = require("../../lib/http");
+import mongoose from "mongoose";
+import { connectMongo } from "../../lib/mongo.js";
+import Event from "../../models/Event.js";
+import { json, notFound, serverError } from "../../lib/http.js";
 
 function serialize(doc) {
   return {
@@ -18,7 +18,7 @@ function serialize(doc) {
   };
 }
 
-exports.handler = async (event) => {
+export const handler = async (event) => {
   const id = event.pathParameters?.id;
   if (!id || !mongoose.isValidObjectId(id)) return notFound("Invalid event id");
 
