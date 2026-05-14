@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { forwardRef, type ButtonHTMLAttributes, type ComponentProps } from "react";
+import { useLoading } from "@/lib/loading-context";
 
 const base =
   "inline-flex items-center justify-center gap-2 rounded-cw-sm px-4 py-2.5 text-sm font-semibold tracking-tight transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-cw-bg disabled:pointer-events-none disabled:opacity-45";
@@ -37,6 +38,16 @@ export type LinkButtonProps = ComponentProps<typeof Link> & {
   variant?: Variant;
 };
 
-export function LinkButton({ className = "", variant = "primary", ...props }: LinkButtonProps) {
-  return <Link className={`${base} ${variants[variant]} ${className}`} {...props} />;
+export function LinkButton({ className = "", variant = "primary", onClick, ...props }: LinkButtonProps) {
+  const { beginNavigation } = useLoading();
+  return (
+    <Link
+      className={`${base} ${variants[variant]} ${className}`}
+      onClick={(e) => {
+        onClick?.(e);
+        if (!e.defaultPrevented) beginNavigation();
+      }}
+      {...props}
+    />
+  );
 }

@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { EventCard } from "@/components/event-card";
+import { NavLink } from "@/components/nav-link";
 import { LinkButton } from "@/components/ui/button";
 import { useEvents } from "@/lib/events-context";
 
@@ -52,12 +52,12 @@ export default function HomePage() {
               Curated from your workspace—demo data seeds on first visit.
             </p>
           </div>
-          <Link
+          <NavLink
             href="/events/"
             className="text-sm font-semibold text-cw-accent hover:text-cw-accent-hover"
           >
             View all →
-          </Link>
+          </NavLink>
         </div>
         <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {featured.slice(0, 3).map((e) => (

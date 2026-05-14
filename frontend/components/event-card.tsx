@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Link from "next/link";
+import { NavLink } from "@/components/nav-link";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { formatEventDate } from "@/lib/format-date";
@@ -8,7 +8,7 @@ import type { EventRecord } from "@/lib/types";
 export function EventCard({ event, href }: { event: EventRecord; href: string }) {
   const banner = event.bannerUrl?.trim() ?? "";
   return (
-    <Link href={href} className="group block h-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cw-accent focus-visible:ring-offset-2 focus-visible:ring-offset-cw-bg">
+    <NavLink href={href} className="group block h-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cw-accent focus-visible:ring-offset-2 focus-visible:ring-offset-cw-bg">
       <Card className="h-full overflow-hidden transition group-hover:-translate-y-0.5 group-hover:shadow-cw">
         <div className="relative aspect-[16/10] w-full overflow-hidden bg-cw-surface-2">
           {banner ? (
@@ -35,6 +35,6 @@ export function EventCard({ event, href }: { event: EventRecord; href: string })
           <p className="mt-3 text-xs font-medium text-cw-muted">{event.location}</p>
         </div>
       </Card>
-    </Link>
+    </NavLink>
   );
 }

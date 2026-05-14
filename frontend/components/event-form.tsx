@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { fromDatetimeLocalValue, toDatetimeLocalValue } from "@/lib/datetime-local";
+import { useLoading } from "@/lib/loading-context";
 import type { EventRecord } from "@/lib/types";
 import Image from "next/image";
 
@@ -65,6 +66,7 @@ export function EventForm({
   }) => void | Promise<void>;
 }) {
   const router = useRouter();
+  const { beginNavigation } = useLoading();
   const [values, setValues] = useState<EventFormValues>(() =>
     initial
       ? {
@@ -148,6 +150,7 @@ export function EventForm({
           bannerUrl: values.bannerUrl.trim(),
         }),
       );
+      beginNavigation();
       router.push(withTrailingSlash("/dashboard/events"));
     } catch (e) {
       const msg =
@@ -208,7 +211,7 @@ export function EventForm({
           <div className="space-y-2">
             <span className="text-sm font-medium text-cw-text">Banner image</span>
             <p className="text-xs text-cw-muted">
-              Required. After upload, the S3 object URL is saved as <code className="text-cw-text">bannerUrl</code>.
+              Required — use <strong className="text-cw-text">Upload to S3</strong> only. Your image is stored on S3 and the link is saved when you publish.
             </p>
             <div className="flex flex-wrap items-center gap-3">
               <input

@@ -11,6 +11,7 @@ import {
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { isOidcConfigured } from "@/lib/cognito-oidc";
+import { useLoading } from "@/lib/loading-context";
 import type { EventRecord, RegistrationRecord } from "@/lib/types";
 
 type EventsContextValue = {
@@ -34,6 +35,7 @@ const EventsContext = createContext<EventsContextValue | null>(null);
 
 export function EventsProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
+  const { runWithLoading } = useLoading();
   const [events, setEvents] = useState<EventRecord[]>([]);
   const [registeredIds, setRegisteredIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -52,22 +54,24 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
 
     setLoading(true);
     try {
-      const list = await apiFetch<EventRecord[]>("/events", { method: "GET", auth: false });
-      setEvents(Array.isArray(list) ? list : []);
+      await runWithLoading(async () => {
+        const list = await apiFetch<EventRecord[]>("/events", { method: "GET", auth: false });
+        setEvents(Array.isArray(list) ? list : []);
 
-      if (isOidcConfigured() && user) {
-        try {
-          const mine = await apiFetch<{ eventIds: string[] }>("/me/registrations", {
-            method: "GET",
-            auth: true,
-          });
-          setRegisteredIds(new Set(mine.eventIds ?? []));
-        } catch {
+        if (isOidcConfigured() && user) {
+          try {
+            const mine = await apiFetch<{ eventIds: string[] }>("/me/registrations", {
+              method: "GET",
+              auth: true,
+            });
+            setRegisteredIds(new Set(mine.eventIds ?? []));
+          } catch {
+            setRegisteredIds(new Set());
+          }
+        } else {
           setRegisteredIds(new Set());
         }
-      } else {
-        setRegisteredIds(new Set());
-      }
+      });
     } catch (e) {
       const msg = e && typeof e === "object" && "message" in e ? String((e as Error).message) : "Failed to load events";
       setError(msg);
@@ -75,7 +79,7 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, runWithLoading]);
 
   useEffect(() => {
     const id = window.setTimeout(() => {
@@ -91,62 +95,76 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
 
   const createEvent = useCallback(
     async (input: Omit<EventRecord, "id" | "createdAt">) => {
-      const created = await apiFetch<EventRecord>("/events", {
-        method: "POST",
-        auth: true,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: input.title,
-          description: input.description,
-          startsAt: input.startsAt,
-          location: input.location,
-          bannerUrl: input.bannerUrl,
-        }),
+      return runWithLoading(async () => {
+        const created = await apiFetch<EventRecord>("/events", {
+          method: "POST",
+          auth: true,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: input.title,
+            description: input.description,
+            startsAt: input.startsAt,
+            location: input.location,
+            bannerUrl: input.bannerUrl,
+          }),
+        });
+        setEvents((prev) => [created, ...prev]);
+        return created;
       });
-      setEvents((prev) => [created, ...prev]);
-      return created;
     },
-    [],
+    [runWithLoading],
   );
 
-  const updateEvent = useCallback(async (id: string, patch: Partial<EventRecord>) => {
-    const body: Record<string, string> = {};
-    if (patch.title !== undefined) body.title = patch.title;
-    if (patch.description !== undefined) body.description = patch.description;
-    if (patch.startsAt !== undefined) body.startsAt = patch.startsAt;
-    if (patch.location !== undefined) body.location = patch.location;
-    if (patch.bannerUrl !== undefined) body.bannerUrl = patch.bannerUrl;
+  const updateEvent = useCallback(
+    async (id: string, patch: Partial<EventRecord>) => {
+      await runWithLoading(async () => {
+        const body: Record<string, string> = {};
+        if (patch.title !== undefined) body.title = patch.title;
+        if (patch.description !== undefined) body.description = patch.description;
+        if (patch.startsAt !== undefined) body.startsAt = patch.startsAt;
+        if (patch.location !== undefined) body.location = patch.location;
+        if (patch.bannerUrl !== undefined) body.bannerUrl = patch.bannerUrl;
 
-    const updated = await apiFetch<EventRecord>(`/events/${id}`, {
-      method: "PUT",
-      auth: true,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    setEvents((prev) => prev.map((e) => (e.id === id ? updated : e)));
-  }, []);
+        const updated = await apiFetch<EventRecord>(`/events/${id}`, {
+          method: "PUT",
+          auth: true,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        setEvents((prev) => prev.map((e) => (e.id === id ? updated : e)));
+      });
+    },
+    [runWithLoading],
+  );
 
-  const deleteEvent = useCallback(async (id: string) => {
-    await apiFetch(`/events/${id}`, { method: "DELETE", auth: true });
-    setEvents((prev) => prev.filter((e) => e.id !== id));
-    setRegisteredIds((prev) => {
-      const next = new Set(prev);
-      next.delete(id);
-      return next;
-    });
-  }, []);
+  const deleteEvent = useCallback(
+    async (id: string) => {
+      await runWithLoading(async () => {
+        await apiFetch(`/events/${id}`, { method: "DELETE", auth: true });
+        setEvents((prev) => prev.filter((e) => e.id !== id));
+        setRegisteredIds((prev) => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
+      });
+    },
+    [runWithLoading],
+  );
 
   const registerForEvent = useCallback(
     async (eventId: string) => {
-      await apiFetch(`/events/${eventId}/register`, {
-        method: "POST",
-        auth: true,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
+      await runWithLoading(async () => {
+        await apiFetch(`/events/${eventId}/register`, {
+          method: "POST",
+          auth: true,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({}),
+        });
+        setRegisteredIds((prev) => new Set(prev).add(eventId));
       });
-      setRegisteredIds((prev) => new Set(prev).add(eventId));
     },
-    [],
+    [runWithLoading],
   );
 
   const isRegistered = useCallback(

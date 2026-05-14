@@ -51,9 +51,7 @@ export default function EventsPage() {
         </div>
       </div>
 
-      {loading ? (
-        <p className="mt-10 text-center text-sm text-cw-muted">Loading events…</p>
-      ) : null}
+      {loading ? <div className="mt-10 min-h-[200px]" aria-hidden /> : null}
 
       {error && !loading ? (
         <div
